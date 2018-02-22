@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<div id="data"></div>
+	<script language="JavaScript">
+		var data = "";
+		var xml;
+		function loadFileToElement(filename, elementId)
+		{
+		    var xmlHTTP = new XMLHttpRequest();
+		    try
+		    {
+		    xmlHTTP.open("GET", filename, false);
+		    xmlHTTP.send(null);
+		    }
+		    catch (e) {
+		        window.alert("Unable to load the requested file.");
+		        return;
+		    }
+		    var parser = new DOMParser();
+			var xmlDoc = parser.parseFromString(xmlHTTP.responseText,"text/xml");
+			data = xmlDoc;
+		    // document.getElementById(elementId).innerHTML=xmlHTTP.responseText;
+		}
+		function xmlToJson(xml) {
+			
+			// Create the return object
+			var obj = {};
+
+			if (xml.nodeType == 1) { // element
+				// do attributes
+				if (xml.attributes.length > 0) {
+				obj["@attributes"] = {};
+					for (var j = 0; j < xml.attributes.length; j++) {
+						var attribute = xml.attributes.item(j);
+						obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+					}
+				}
+			} else if (xml.nodeType == 3) { // text
+				obj = xml.nodeValue;
+			}
+
+			// do children
+			if (xml.hasChildNodes()) {
+				for(var i = 0; i < xml.childNodes.length; i++) {
+					var item = xml.childNodes.item(i);
+					var nodeName = item.nodeName;
+					if (typeof(obj[nodeName]) == "undefined") {
+						obj[nodeName] = xmlToJson(item);
+					} else {
+						if (typeof(obj[nodeName].push) == "undefined") {
+							var old = obj[nodeName];
+							obj[nodeName] = [];
+							obj[nodeName].push(old);
+						}
+						obj[nodeName].push(xmlToJson(item));
+					}
+				}
+			}
+			return obj;
+		};
+		// first argument is file name, format should be ./XXX.xml, the spurce file should be same folder as this html file
+		loadFileToElement("./data.xml","data")
+		var jsonform = xmlToJson(data);
+		var reactionList = jsonform.sbml.model.listOfReactions.reaction;
+		var result;
+		reactionList.forEach(function(d){
+			result+=d["@attributes"].id
+			result+="\n"
+			if(d.listOfProducts != undefined){
+				result+='Products: \n'
+				result+="\t"
+				if(Array.isArray(d.listOfProducts.speciesReference)){
+					d.listOfProducts.speciesReference.forEach(function(e){
+						result+="species=\""
+						result+=e["@attributes"].species
+						result+="\" stoichiometry="
+						result+=e["@attributes"].stoichiometry
+						result+=" "
+					})
+				}
+				else{
+					result+="species="
+					result+="\""
+					result+=d.listOfProducts.speciesReference["@attributes"].species
+					result+="\""
+					result+=" stoichiometry="
+					result+=d.listOfProducts.speciesReference["@attributes"].stoichiometry
+					result+=" "
+				}
+			}
+			result+="\n"
+			if(d.listOfReactants != undefined){
+				result+='Reactants: \n'
+				result+="\t"
+				if(Array.isArray(d.listOfReactants.speciesReference)){
+					d.listOfReactants.speciesReference.forEach(function(e){
+						result+="species=\""
+						result+=e["@attributes"].species
+						result+="\" stoichiometry="
+						result+=e["@attributes"].stoichiometry
+						result+=" "
+					})
+				}
+				else{
+					result+="species=\""
+					result+=d.listOfReactants.speciesReference["@attributes"].species
+					result+="\" stoichiometry="
+					result+=d.listOfReactants.speciesReference["@attributes"].stoichiometry
+					result+=" "
+				}
+			}
+			result+="\n"
+		})
+		console.log(jsonform.sbml.model.listOfReactions.reaction)
+		document.getElementById("data").innerText=result;
+	</script>
+</body>
+</html>
