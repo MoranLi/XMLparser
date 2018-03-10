@@ -66,10 +66,16 @@
 		// first argument is file name, format should be ./XXX.xml, the spurce file should be same folder as this html file
 		loadFileToElement("./data.xml","data")
 		var jsonform = xmlToJson(data);
+		// console.log(jsonform)
+		var compartmentList = jsonform.sbml.model.listOfCompartments.compartment;
+		console.log(compartmentList)
+		var speciesList = jsonform.sbml.model.listOfSpecies.species;
+		console.log(speciesList)
 		var reactionList = jsonform.sbml.model.listOfReactions.reaction;
+		console.log(reactionList)
 		var result;
 		reactionList.forEach(function(d){
-			result+=d["@attributes"].id
+			result+=d["@attributes"].name
 			result+="\n"
 			if(d.listOfProducts != undefined){
 				result+='Products: \n'
@@ -77,16 +83,47 @@
 				if(Array.isArray(d.listOfProducts.speciesReference)){
 					d.listOfProducts.speciesReference.forEach(function(e){
 						result+="species=\""
-						result+=e["@attributes"].species
+						var productId = e["@attributes"].species;
+						speciesList.forEach(function(f){
+							if(f["@attributes"].id == productId){
+								result +=""
+								result += f["@attributes"].name;
+								compartmentList.forEach(function(g){
+									if(f["@attributes"].compartment == g.id){
+										result+=" comparment=\""
+										result+=g["@attributes"].name
+										result+="\""
+										// break;
+									}
+								})
+								// break;
+							}
+						})
 						result+="\" stoichiometry="
 						result+=e["@attributes"].stoichiometry
 						result+=" "
+						result+="\n"
 					})
 				}
 				else{
 					result+="species="
 					result+="\""
-					result+=d.listOfProducts.speciesReference["@attributes"].species
+					var productId = d.listOfProducts.speciesReference["@attributes"].species
+					speciesList.forEach(function(f){
+							if(f["@attributes"].id == productId){
+								result +=""
+								result += f["@attributes"].name;
+								compartmentList.forEach(function(g){
+									if(f["@attributes"].compartment == g["@attributes"].id){
+										result+=" comparment=\""
+										result+=g["@attributes"].name
+										result+="\""
+										// break;
+									}
+								})
+								// break;
+							}
+						})
 					result+="\""
 					result+=" stoichiometry="
 					result+=d.listOfProducts.speciesReference["@attributes"].stoichiometry
@@ -100,23 +137,66 @@
 				if(Array.isArray(d.listOfReactants.speciesReference)){
 					d.listOfReactants.speciesReference.forEach(function(e){
 						result+="species=\""
-						result+=e["@attributes"].species
+						var productId = e["@attributes"].species;
+						speciesList.forEach(function(f){
+							if(f["@attributes"].id == productId){
+								result +=""
+								result += f["@attributes"].name;
+								compartmentList.forEach(function(g){
+									if(f["@attributes"].compartment == g["@attributes"].id){
+										result+=" comparment=\""
+										result+=g["@attributes"].name
+										result+="\""
+										// break;
+									}
+								})
+								// break;
+							}
+						})
 						result+="\" stoichiometry="
 						result+=e["@attributes"].stoichiometry
 						result+=" "
+						result+="\n"
 					})
 				}
 				else{
-					result+="species=\""
-					result+=d.listOfReactants.speciesReference["@attributes"].species
-					result+="\" stoichiometry="
+					result+="species="
+					result+="\""
+					var productId = d.listOfReactants.speciesReference["@attributes"].species
+					speciesList.forEach(function(f){
+						// console.log(f)
+							if(f["@attributes"].id == productId){
+								result +=""
+								result += f["@attributes"].name;
+								compartmentList.forEach(function(g){
+									if(f["@attributes"].compartment == g["@attributes"].id){
+										result+=" comparment=\""
+										result+=g["@attributes"].name
+										result+="\""
+										// break;
+									}
+								})
+								// break;
+							}
+						})
+					result+="\""
+					result+=" stoichiometry="
 					result+=d.listOfReactants.speciesReference["@attributes"].stoichiometry
 					result+=" "
 				}
 			}
 			result+="\n"
+			result+=d.kineticLaw.listOfParameters.parameter[0]["@attributes"].id
+			result+=":"
+			result+=d.kineticLaw.listOfParameters.parameter[0]["@attributes"].value
+			result+="\n"
+			result+=d.kineticLaw.listOfParameters.parameter[1]["@attributes"].id
+			result+=":"
+			result+=d.kineticLaw.listOfParameters.parameter[1]["@attributes"].value
+			result+="\n"
+			result+="\n"
 		})
-		console.log(jsonform.sbml.model.listOfReactions.reaction)
+		// console.log(jsonform.sbml.model.listOfReactions.reaction)
 		document.getElementById("data").innerText=result;
 	</script>
 </body>
